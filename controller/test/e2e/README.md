@@ -1013,6 +1013,15 @@ flags for the perf stream, and the results land in
 `kaps-bench-results.tar.gz` in this directory.
 Every lane checks the folder before it takes a machine: the site lane in its
 first step at stage `full`, the `nico-forge` lane at the start of the tenant create.
+Each run gets the tenant's worker count as kaps-bench's `NODE_COUNT` parameter.
+
+kaps-bench publishes its results to OpenSearch instead when the shell that runs
+the suite sets an endpoint:
+
+| Name | What it is |
+|---|---|
+| `KB_OPENSEARCH_URL` | OpenSearch endpoint. Secret. Empty keeps the results local. |
+| `KB_OPENSEARCH_USER`, `KB_OPENSEARCH_PASS` | Basic auth for the endpoint. Secret. Uploaded files keep the user name readable. |
 
 Both lanes create the same `nico-forge` tenant and both entries carry that
 label, so pick between them with `site-controller`, which only the lane that

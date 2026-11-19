@@ -813,14 +813,14 @@ step_run() {
 
 # The variables withhold scrubs and run masks.
 withheld_vars() {
-  compgen -v | grep -E '_JUMP_HOST$|^SSA_ISSUER$|^DSX_.*_API$' || true
+  compgen -v | grep -E '_JUMP_HOST$|^SSA_ISSUER$|^DSX_.*_API$|^KB_OPENSEARCH_URL$' || true
 }
 
 # The host a URL names, which an error can carry without the rest of the
 # URL: a DNS lookup, a certificate that does not match. Whitespace goes
 # first, or it hides the port, and an IPv6 address loses its brackets.
 host_of() {
-  printf '%s' "$1" | tr -d '[:space:]' | sed -E 's|^[A-Za-z][A-Za-z0-9+.-]*://||; s|[/?#].*$||; s|:[0-9]*$||; s|^\[(.*)\]$|\1|'
+  printf '%s' "$1" | tr -d '[:space:]' | sed -E 's|^[A-Za-z][A-Za-z0-9+.-]*://||; s|[/?#].*$||; s|^.*@||; s|:[0-9]*$||; s|^\[(.*)\]$|\1|'
 }
 
 # The suite names the jump host in its own errors ("not reachable
@@ -828,7 +828,8 @@ host_of() {
 # errors it returns. Both land in the log and the JUnit report, and
 # GitHub masks a secret in the job log but not in an uploaded artifact.
 # A DSX API host names its datahall and reaches the same places, in the
-# provider's errors and in any issuer built on it.
+# provider's errors and in any issuer built on it. kaps-bench names its
+# OpenSearch endpoint in its log and in a failed connection's error.
 #
 # Every declared host: a run reaches one of them, and which one is not
 # worth branching on here. Discovered by suffix rather than listed, so a

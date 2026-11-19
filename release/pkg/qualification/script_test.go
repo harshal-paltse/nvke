@@ -814,6 +814,29 @@ func TestWithholdScrubsTheDSXAPIHosts(t *testing.T) {
 	}
 }
 
+func TestWithholdScrubsTheOpenSearchEndpoint(t *testing.T) {
+	for _, sh := range shells(t) {
+		dir := t.TempDir()
+		text := "ping opensearch: Get \"https://opensearch.example:9200\": dial tcp: lookup opensearch.example: no such host\nuser kaps kept\n"
+		if err := os.WriteFile(filepath.Join(dir, "qualify-e2e.log"), []byte(text), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		l := newSteps(t, sh, map[string]string{
+			"KB_OPENSEARCH_URL":  "https://opensearch.example:9200",
+			"KB_OPENSEARCH_USER": "kaps",
+		})
+		l.step(true, "withhold", dir)
+		want := "ping opensearch: Get \"[withheld]\": dial tcp: lookup [withheld]: no such host\nuser kaps kept\n"
+		got, err := os.ReadFile(filepath.Join(dir, "qualify-e2e.log"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != want {
+			t.Errorf("%s: scrubbed to %q, want %q", sh, got, want)
+		}
+	}
+}
+
 // The host alone is taken from the URL as the provider reads it: trimmed, and
 // without an IPv6 address's brackets.
 func TestWithholdScrubsThePaddedOrBracketedAPIHost(t *testing.T) {
@@ -827,6 +850,11 @@ func TestWithholdScrubsThePaddedOrBracketedAPIHost(t *testing.T) {
 			"https://[fd00::3]:443",
 			"Post \"https://[fd00::3]:443/realms/r/token\": x509: certificate is valid for other.example, not fd00::3\n",
 			"Post \"[withheld]/realms/r/token\": x509: certificate is valid for other.example, not [withheld]\n",
+		},
+		{
+			"https://kaps:hunter2@api.hall3.example:443",
+			"Post \"https://kaps:hunter2@api.hall3.example:443/realms/r/token\": dial tcp: lookup api.hall3.example: no such host\n",
+			"Post \"[withheld]/realms/r/token\": dial tcp: lookup [withheld]: no such host\n",
 		},
 	} {
 		for _, sh := range shells(t) {
